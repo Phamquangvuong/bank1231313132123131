@@ -6,7 +6,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // ⚠️ SỬA THÔNG TIN
 const BANK = "MB";
@@ -14,19 +14,25 @@ const STK = "0975868667";
 const USERNAME = "0975868667";
 const PASSWORD = "Phamquangvuong@123";
 
-// lưu đơn
+// lưu đơn tạm
 let payments = [];
 
 // MB instance
 let mb = null;
 let lastLogin = 0;
 
-// 🔐 login MB
+// chống crash
+process.on("uncaughtException", err => {
+    console.log("❌ Uncaught:", err.message);
+});
+
+// login MB
 async function initMB() {
     if (!mb || Date.now() - lastLogin > 5 * 60 * 1000) {
         mb = new MB({
             username: USERNAME,
             password: PASSWORD,
+            preferredOCRMethod: "tesseract" // 🔥 tránh lỗi sharp
         });
 
         console.log("🔐 Login MB...");
@@ -44,18 +50,18 @@ function formatDate(d) {
 
 // lấy lịch sử
 async function getHistory() {
-    await initMB();
-
-    const balance = await mb.getBalance();
-    const acc = balance?.balances?.[0]?.number;
-
-    if (!acc) return [];
-
-    const today = new Date();
-    const from = new Date();
-    from.setDate(today.getDate() - 3); // 🔥 lấy 3 ngày
-
     try {
+        await initMB();
+
+        const balance = await mb.getBalance();
+        const acc = balance?.balances?.[0]?.number;
+
+        if (!acc) return [];
+
+        const today = new Date();
+        const from = new Date();
+        from.setDate(today.getDate() - 3);
+
         const history = await mb.getTransactionsHistory({
             accountNumber: acc,
             fromDate: formatDate(from),
@@ -64,16 +70,15 @@ async function getHistory() {
 
         return history || [];
     } catch (e) {
-        console.log("❌ Lỗi history:", e.message);
+        console.log("❌ History lỗi:", e.message);
         return [];
     }
 }
 
-// 🔥 tạo QR
+// tạo QR
 app.get("/create", (req, res) => {
     const amount = Number(req.query.amount) || 10000;
 
-    // 🔥 note chống lỗi
     const note = "nap" + Date.now();
 
     const qr = `https://img.vietqr.io/image/${BANK}-${STK}-compact2.png?amount=${amount}&addInfo=${note}`;
@@ -90,7 +95,7 @@ app.get("/create", (req, res) => {
     res.json({ qr, note, amount });
 });
 
-// 🔥 check thanh toán
+// check thanh toán
 app.get("/check", async (req, res) => {
     const note = req.query.note;
 
@@ -127,7 +132,7 @@ app.get("/check", async (req, res) => {
     }
 });
 
-// 🔄 auto check nền
+// auto check nền
 setInterval(async () => {
     if (!payments.length) return;
 
@@ -152,7 +157,7 @@ setInterval(async () => {
 
 }, 5000);
 
-// 🚀 chạy server
+// chạy server
 app.listen(PORT, () => {
-    console.log("🚀 http://localhost:" + PORT);
+    console.log("🚀 Server chạy tại port:", PORT);
 });
