@@ -6,13 +6,13 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // ⚠️ SỬA THÔNG TIN
 const BANK = "MB";
 const STK = "0975868667";
-const USERNAME = "0975868667";
-const PASSWORD = "Phamquangvuong@123";
+const USERNAME = process.env.MB_USER;
+const PASSWORD = process.env.MB_PASS;
 
 // lưu đơn
 let payments = [];
@@ -53,7 +53,7 @@ async function getHistory() {
 
     const today = new Date();
     const from = new Date();
-    from.setDate(today.getDate() - 3); // 🔥 lấy 3 ngày
+    from.setDate(today.getDate() - 3);
 
     try {
         const history = await mb.getTransactionsHistory({
@@ -68,23 +68,27 @@ async function getHistory() {
         return [];
     }
 }
-app.get("/api/home", (req, res) => {
-  res.json({
-    name: "MB API",
-    endpoints: {
-      create: "/api/create?nap=10000",
-      check: "/api/check?note=napxxxx",
-      orders: "/api/orders"
-    },
-    time: new Date().toLocaleString()
-  });
+
+//
+// 🏠 HOME API LIST
+//
+app.get("/home/api", (req, res) => {
+    res.json({
+        dev: "qvuong",
+        endpoints: {
+            create: "/home/naptien?sotien=10000",
+            check: "/home/api/check?note=napxxxx"
+        },
+        status: "running"
+    });
 });
 
-// 🔥 tạo QR
-app.get("/api/create", (req, res) => {
-    const amount = Number(req.query.amount) || 10000;
+//
+// 💳 CREATE BILL
+//
+app.get("/home/naptien", (req, res) => {
+    const amount = Number(req.query.sotien) || 10000;
 
-    // 🔥 note chống lỗi
     const note = "nap" + Date.now();
 
     const qr = `https://img.vietqr.io/image/${BANK}-${STK}-compact2.png?amount=${amount}&addInfo=${note}`;
@@ -101,8 +105,10 @@ app.get("/api/create", (req, res) => {
     res.json({ qr, note, amount });
 });
 
-// 🔥 check thanh toán
-app.get("/api/check", async (req, res) => {
+//
+// 🔍 CHECK
+//
+app.get("/home/api/check", async (req, res) => {
     const note = req.query.note;
 
     const payment = payments.find(p => p.note === note);
@@ -110,13 +116,6 @@ app.get("/api/check", async (req, res) => {
 
     try {
         const history = await getHistory();
-
-        console.log("===== DEBUG =====");
-        console.log("NOTE:", note);
-
-        history.forEach(tx => {
-            console.log("DESC:", tx.transactionDesc);
-        });
 
         const found = history.find(tx => {
             const desc = (tx.transactionDesc || "")
@@ -138,7 +137,9 @@ app.get("/api/check", async (req, res) => {
     }
 });
 
-// 🔄 auto check nền
+//
+// 🔄 AUTO CHECK
+//
 setInterval(async () => {
     if (!payments.length) return;
 
@@ -163,7 +164,9 @@ setInterval(async () => {
 
 }, 5000);
 
-// 🚀 chạy server
+//
+// 🚀 START
+//
 app.listen(PORT, () => {
-    console.log("🚀 http://localhost:" + PORT);
+    console.log("🚀 Server running on port " + PORT);
 });
