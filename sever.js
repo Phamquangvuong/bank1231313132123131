@@ -74,12 +74,12 @@ async function getHistory() {
 //
 app.get("/home/api", (req, res) => {
     res.json({
-        dev: "qvuong",
+        dev: "Pham Quang Vuong",
         endpoints: {
             create: "/home/naptien?sotien=10000",
             check: "/home/api/check?note=napxxxx"
         },
-        status: "running"
+        status: "online"
     });
 });
 
