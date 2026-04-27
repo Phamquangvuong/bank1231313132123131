@@ -11,8 +11,8 @@ const PORT = process.env.PORT || 3000;
 
 // 🔴 NHÚNG REDIS TRỰC TIẾP
 const redis = new Redis({
-  url: "YOUR_REDIS_URL",
-  token: "YOUR_REDIS_TOKEN"
+  url: "https://safe-platypus-74809.upstash.io",
+  token: "gQAAAAAAASQ5AAIgcDJhZDRhMjUwMTY5ODc0NDNiYWNlYmNiOWUxYTE2YWUzYQ"
 });
 
 // 🔐 MB
