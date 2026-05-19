@@ -17,7 +17,7 @@ const redis = new Redis({
 
 // 🔐 MB
 const BANK = "MB";
-const STK = "0975868667";
+const STK = "006675678";
 
 let mb = null;
 let lastLogin = 0;
