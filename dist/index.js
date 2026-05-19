@@ -762,15 +762,12 @@ var OCRModel = class {
    */
   async downloadOnnxModel() {
     try {
-      const model = await (0, import_undici.request)(
-  "https://github.com/thedtvn/mbbank-capcha-ocr/raw/refs/heads/master/mb_capcha_ocr/model.onnx",
-  {
-    headers: {
-      "User-Agent":
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-    }
-  }
-);
+      const model = await (0, import_undici.request)("https://github.com/thedtvn/mbbank-capcha-ocr/raw/refs/heads/master/mb_capcha_ocr/model.onnx", {
+        maxRedirections: 10,
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        }
+      });
       const fileStream = (0, import_fs.createWriteStream)(this.modelPath);
       await new Promise((resolve, reject) => {
         model.body.pipe(fileStream);
